@@ -1,0 +1,5 @@
+package com.rabbitmqapp.code;
+
+public class RabbitMQConfig {
+
+}

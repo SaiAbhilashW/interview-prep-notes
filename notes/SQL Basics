@@ -1,0 +1,58 @@
+ACID Properties of a transaction:
+
+Atomicity
+---------
+A transaction is atomic in nature. Either all the instructions in a transaction execute or none of them do. If the transaction somehow fails in the middle, the changes happened till now are reverted.
+
+Consistency
+-----------
+If a DB was consitent before a transaction, it must remain consistent after transaction too.
+Suppose there is a transfer of money from account A to B, the total amount in A + B before and after the transaction must remain the same.
+If AID hold true, C holds true automatically.
+
+Isolation
+---------
+Each transaction should execute in isolation. Isolation here means logical isolation. So if two transactions are executing concurently and the ends result of both of them is same as that when they would have executed independently, we call them to execute in isolation.
+No transaction should be affected by other parallely executing transaction
+
+Durability
+----------
+If you have made a change in DB it must persist irrespective of what happens until you change it yourself
+
+
+Transaction states:
+
+Active
+------
+Till the time the instructions in a transaction are being executed, transaction is in active state
+
+Failed
+------
+Some problem during execution of instruction occured, transaction state switches to failed
+
+Partially Committed
+-------------------
+When the execution of instructions is complete, these instructions don't interface directly with the DB. They are still stored in local buffer in main memory. 
+
+Committed
+---------
+If there are no problems with the transaction during the execution in main memory, they are applied to the DB and the state changes to Committed.
+
+Terminated
+----------
+State of transaction changes to Committed or Aborted state -> transaction is done and state changes to Terminated
+
+Aborted
+-------
+transaction failed from Active or Partially Committed state, DB is rolledback to the prev consistent instance and state changes to Aborted. 
+
+
+Normalization:
+
+Breaking down large tables in DB into smaller ones until the point that each table exists as a seperate, independent entity. 
+
+Normal forms:
+1NF
+2NF
+3NF
+BCNF

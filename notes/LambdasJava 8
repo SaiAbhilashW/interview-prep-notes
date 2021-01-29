@@ -1,0 +1,75 @@
+Lambdas and Functional programming in java 8
+________________________________________________________________________
+https://www.youtube.com/playlist?list=PLqq-6Pq4lTTa9YGfyhyW2CqdtW9RtY-I3
+
+Why Lambdas? 
+- Readability
+- Enables functional programming
+- Enables support for parallel processing (create ||el streams using threads)
+
+Functional Programming vs Object oriented programming  :
+
+- writing more readable and maintainable code
+
+exp - In object oriented programming everything we code is an object which is associated with a class. So to do anything we need an object and a class. What if somebody says I just need to execute a println fn why should I declare a class write a method, create an object and then call the method. So much code for so little need.
+
+Lambdas - functions, don't belong to any class, exist in isolation
+		- can be treated as values ? - we can assign a block of code to a variable
+		aBlockOfCode = {......}
+		Before Java 8 :
+		public void methodName(){....}
+
+		We can assign this block of code to a variable and then use it anywhere like this :
+		aBlockOfCode = public void methodName(){....}
+			- this function exists in isolation so no need of public
+			- doesn't need the methodName because it will be known as aBlockOfCode 
+			- desn't need return type, compiler is smart to look at the code and understand it
+		So what is left is:
+		aBlockOfCode = (){...} , just add a ->
+		so, aBlockOfCode = () -> {....} // this is a lambda expression
+		e.g. aBlockOfCode = (int a) -> a*2;
+
+	What to do about the type of 'aBlockOfCode'? We can get anything returned by () -> {....}
+	So we create a FUNCTIONAL INTERFACE 
+		- has only one abstract method in the interface
+		- In java 8  you can write interfaces which have implementation method
+		- Use annotation @FunctionalInterface to give a clue to any other developer to not add one more abstract method to your functional interface
+		- look for functions like Collections.sort(someList, comparator) where comparator is a functional interface having only one abstract method. So instead of passing a comparator implementation just pass a lambda expression
+
+	for a lambda expression aBlockOfCode = (int a) -> a*2; we create an interface
+
+	public interface FuncInterface {
+		void int foo(int a)
+	}
+
+	FuncInterface aBlockOfCode = (int a) -> a*2;
+	//can also be written as aBlockOfCode = a -> a*2;
+
+	The signature of foo and aBlockOfCode should match
+
+	** It seems necessary that to implement a lambda expression, there should be a functional interface associated with it. True. But does it need to be written by the user everytime? Isn't there some generic inbuilt implementation? There is!
+
+	E.g. aBooleanResult = a -> true; This takes a and returns a boolean value.
+	There is a functional interface named Predicate written in java.utils.functions which has a method that takes some a and returns a boolean value. Now user doesn't need to write this placeholder code.
+
+	So Predicate<Person> aBooleanResult = a -> true; // consider a to be a instance of some Person class
+	Similarly many interfaces with different arguements and return values are present.
+
+
+* External and Internal iteration
+
+In Java 7 : iteration methods like for, for-in are exteral, you are counting and assigning the iterated value to a variable for further use in the block of code.
+
+In Java 8 : iteration is internal using forEach method over a collection, you don't need to worry about how is the system iterating over the collection (low to high /high to low) you need to worry about what to do when you get the iterated element
+
+e.g. people.forEach(p -> system.out.println(p))
+// forEach takes a Consumer interface type lambda exp i.e. one which has a single input param and no return value
+
+* Internal iteration using forEach enables us to do parallel processing because we don't worry about order in forEach
+
+
+** Streams
+
+Consider a conveyer belt which continously moves and workers pick up each individual part and do stuff on it.
+That's how streams are. You take one emlement from a stream, filter it pass it to next fn, loop it pass it to next fn, map it pass it to next fn and ultimately collect it.
+It also gives us an option for parallel processing where more than one set of fns can pick up elements from the conveyer belt and give output simultaneously

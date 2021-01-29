@@ -1,0 +1,13 @@
+Common Directories
+
+/ -> root
+/bin -> where binary data lives
+/etc -> system config files
+/home -> home for a user e.g /home/saiw
+/opt -> optional or third party software
+/tmp -> temporary space, typically cleared on reboot
+/usr -> User related programs
+/var -> variable data, most notably log files
+/media or /cdrom -> where you can access info from the disc inserted
+/boot -> files needed to boot the system
+/proc -> get current processes

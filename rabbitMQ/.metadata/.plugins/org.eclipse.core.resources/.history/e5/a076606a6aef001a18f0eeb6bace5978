@@ -1,0 +1,32 @@
+package com.rabbitmqapp.code;
+
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import com.rabbitmq.client.ConnectionFactory;
+
+@Configuration
+public class RabbitMQConfig {
+	private static final String MY_QUEUE = "MyQueue";
+	
+	//creates a queue in rabbitMQ broker
+	@Bean
+	Queue myQueue() {
+		return new Queue(MY_QUEUE, true);
+	}
+	
+	@Bean
+	ConnectionFactorytory connectionFactory() {
+		CachingConnectionFactory cachingConnectionFactory = new CachingConnectionFactory("localhost");
+		cachingConnectionFactory.setUsername("guest");
+		cachingConnectionFactory.setPassword("guest");
+		return cachingConnectionFactory;
+	}
+	
+}
+
+//Define the queue to listen to
+//Provide the connection to the queue
+//Bind the queue, connection and listener

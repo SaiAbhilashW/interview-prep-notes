@@ -1,0 +1,42 @@
+Node Js - When and When not
+
+NodeJS shines when apps are:
+
+1. Non-Blcking - whenever some event comes it goes to the back of queue to be executed, thread doesn't get blocked
+2. Event Driven - whenever event happens then there is further execution
+3. Data Intensive
+4. I/O Intensive
+
+NodeJS sucks when apps are:
+
+1. Processor intensive  - e.g. for(var i = 0; i < 10000000; i++), calculate 1938023th prime number
+Can't pass on to next event until this calculation is done, entire app hangs
+Is there any other way? - Worker Threads
+
+-----------------------------------------
+
+NodeJs is single threaded - all execution happening is carried out by one processing thread
+This single thread runs through a queue of events. Uses Event loop.
+
+I/O operations generally take a lot of time (e.g. api fetch call). So if nodeJS only has one thread and that thread is used in making API call, nothing will happen until the call is complete. Right?
+
+Wrong! The thread doesn't wait till it gets API response. It makes a API call, goes on to do some other work, comes back when API response is ready. This is Asynchronous behaviour. NodeJS is asynchronous.
+
+Example Applications: 
+- Web Servers
+- Real time servers - web socket connections, manages 100 concurrent connections by applying event driven model. You only go to the connection where some data is being sent/recieved
+- APIs fronting nosql dbs
+- command line utilities
+
+
+multithreading in java, thread pool etc
+JWT
+OAuth
+Worker Threads
+MongoDB Sharding and Indexing
+Testing - Enzymes
+Redis
+Know versions of technology you've used
+
+
+HashMap + red black tree => O(1) best case , O(logn) worst

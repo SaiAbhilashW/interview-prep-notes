@@ -1,0 +1,99 @@
+Messaging:
+
+Enables loosely coupled integration of app components and systems
+
+- contains a header and a body
+
+Some ways components communicate :
+1. Method calls
+2. RPC
+3. HTTP Clients and Servers
+
+All these are Synchronous messaging types
+
+We need to use async messages for heavy load apps
+
+Messaging Protocols:
+1. STOMP
+ - Simple Text-oriented Messaging Protocol
+ - Use STOMP anywhere (interoperable)
+ - no queues, topics, exchanges
+ - Use SEND semantics with "destination" string for where the message is to be delivered
+ - Consumers subscribe to these "destinations" to get the messages
+ - Consumers can implement queues etc around messages
+
+2. MQTT
+ - Message Queue Telemetry Transport
+ - Machine to Machine/ IOT protocol
+ - Simple Pub-Sub messaging
+ - Specifically designed for resource constrained devices with low bandwidth, high latency networks like satellite links or dial up lines
+ - Lightweight, ideal for mobile and IOT and "enterprise messaging"
+ - 1000s of concurrent device connections
+ - Compact binary packets, no message properties, headers are compressed
+ - AWS IoT and Greengrass edge computing soln are designed around MQTT
+
+3. AMQP
+ - Advanced Message Queue Protocol
+ - Use anywhere - desktops, mobiles, IoT
+ - has queuing, topic-based pub-sub messaging, flexible routing, transactions and security
+ - JP Morgan processes billions of messages a day with AMQP
+ - Any two apps having different technology impl can communicate with each other via a broker
+ - Only need to care about the structure of message and not about who is sending it and how it is made
+ 
+ Use cases of AMQP:
+ - real time feed of constantly updating info
+ - encrypted assured transaction
+ - message delivery when destination comes online
+ - sending huge messages while recieving status updates over the same network connection
+ - interoperable in all OS and languages
+
+RabbitMQ
+- Open Source Message broker (message-oriented middleware)
+- plug and play different apps with it
+- developed on Erlang - high throughtput and low latency
+- Supports clustering for fault tolerance and scalability
+- Has exchanges, queues and bindings
+- Allows multiple connection channels inside a single TCP connection, so you don't need to open and large number of TCP conections to message broker
+- Architecture :
+
+Pub --> | exchanges --bindings--> queues | --> Subscriber
+
++ Pub can pushed to multiple exchanges
++ Exchanges can be binded to multiple queues
++ Subscribers can subscribe to multiple queues
+
+* Exchanges
+- AMQP elements where messages are sent first
+- Takes the message and routes it to one or more queues
+- 4 exchange types :
+Direct exhanges - no binding, no config
+
+Fanout exchange - amq.fanout
+Topic exchange - amq.topic
+Topic exchange - amq.match / amq.headers
+
+* Queues
+- Messages are routed to queues from exhanges
+- Consumers configure according to queues
+- Properties:
+Name
+Durable - Either persist the queue or not
+Exclusive - Delete queue if not used anymore
+Auto-Delete - delete queue when consumer unsubscribes
+
+* Topics
+- Are subject part of messages
+- Defined as routing_key for message grouping
+- can send or recieve messages without topics for message delivery
+
+* RabbitMQ vs Others
+Brokerless/ Decenterlized - Not for RabbitMQ, Yes for Kafka
+
+Transaction - Yes for RabbitMQ, No for Kafka
+
+Need to be careful about how you send messages :
+
+Be specific about the queues, exchanges and routings you want the message to be sent. Otherwise it is sent to default exchanges and queues and can get lost in the system
+
+RabbitTemplate.convertAndSend("exhcange name", "routing key", "your object")
+Configure a queue to the "routing key" binding to get this message

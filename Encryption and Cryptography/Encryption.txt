@@ -1,0 +1,33 @@
+encryption at rest
+encryption for data transfer
+
+openssl rand 8 -hex
+gives a random 8 bit hexadecimal key
+
+key space - amount of possible values inside the key
+4 bit value -> 16 possible values
+
+plain text --key--> encrypted text --same key--> plain text
+
+Cipher algorithm:
+Block Cipher 
+- usually encrypts 64,128,196 bits of data at a time
+- Slower
+- good to encrypt stored data
+- DES, 3DES, AES
+
+
+Stream Cipher
+- encrypts 1 bit or 8 bit chunks of data at a time
+- faster
+- good for encrypting real time data
+- video, voice encryption
+
+
+Substitution and Transposition:
+
+Substitution:
+Substitute the chars with other chars
+Only you will have the mapping used 
+
+2bit block cipher - takes to bits at a time, encrypts them, joins them back to the rest again

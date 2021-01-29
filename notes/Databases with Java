@@ -1,0 +1,85 @@
+Databases with Java
+
+Normalisation in RDBMS
+----------------------
+____________________________________________
+https://www.youtube.com/watch?v=UrYLYV7WSHM
+____________________________________________
+
+
+1NF - Primary key, no duplicate values
+	- Each cell must be single valued
+	- Rows to be uniquely identified => The table should have a primary key
+	- Entries in a column are of same type
+Create a row in such a way that it has something which can identify the row as unique (a primary key)
+
+2NF - No Partial Dependency
+	- All the non-key attributes should be dependent on the key, i.e. there shouldn't be any partial dependency
+	- e.g 3 cols A,B,C; AB is the key B -> C; So make 2 tables => A,B and B,C
+	- If they don't depend on key then make a seperate table 
+	- connect both tables by having a relation between both the tables' keys
+
+3NF - No Transitive Dependency 
+	- All columns can be determined only by the key in the table and no other column
+	- i.e. no transitive dependency for non-prime attr; In A,B,C A is primary key, A -> B and B -> C; So create a two new tables A,B and B,C 
+
+BCNF - Every dependency A -> B then A has to be the super key for that table
+	 - A will derive every column in the table on its own
+
+
+JDBC vs Hibernate
+
+1) Object Mapping:
+You need to map each field everytime you make in entry in DB while using JDBC
+//JDBC
+List<User> users=new ArrayList<User>();
+while(rs.next()) {
+     User user = new User();
+     user.setUserId(rs.getString("UserId"));
+     user.setName(rs.getString("FirstName"));
+     user.setEmail(rs.getString(“Email”));
+     users.add(user);
+ }
+
+Hibernate does that for you.. Just assign some annotations before declaring the fields, it automatically maps them to DB while doing a transaction.
+
+//Hibernate
+@Entity
+@Table(name = "user")
+public class UserModel {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private BigInteger id;
+    @NotEmpty
+    @Column(name = "email", unique = true)
+    private String email;
+    @NotEmpty
+    @Column(name = "name")
+    private String name;
+
+2) Object Relational Impedance Mismatch
+________________________________________
+http://hibernate.org/orm/what-is-an-orm/
+----------------------------------------
+
+Fancy way of saying that object models and relational models don't work well together. RDBMS has data stored in tables, Java has more like interconnected graphs. So we face problems when we need to load and store graphs to tables. Five problems occur :
+
+1. Granularity:
+Sometimes Class may be more granular (well defined) than corresponding tables. i.e. no of classes > no of tables. e.g. Address may have only one table, but it may have many subclasses defining it in java
+
+2. Inheritance:
+Nothing in databases to handle inheritance in java
+
+3. Data Navigation:
+You go from one object association to another in java to get data, e.g Employee obj -> employeeAddr obj -> landmark field
+In SQL you want to execute as less queries as possible. You use JOIN to get a targeted data set and then get whatever data you want from it.
+
+4. Equality
+
+5. Assocaitions
+
+Hibernate solves Impedance Mismatch problem.
+
+3) HQL querys in Hibernate provide support to polymorphism in java
+
+4) Database Independent - easy to migrate to a new database without actually changing any queries.

@@ -1,0 +1,5 @@
+package com.microservices.rest.webservices.restfulwebservices.beans;
+
+public class HelloWorldBean {
+
+}

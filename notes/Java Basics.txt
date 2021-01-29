@@ -1,0 +1,128 @@
+https://www.journaldev.com/2752/java-8-interface-changes-static-method-default-method
+https://www.javatpoint.com/ - for all the basics
+
+Abstraction:
+
+Hiding implementation details and giving only the necessary details
+Acheiveing abstraction
+Interface - 100% abstraction
+Abstract class - 0 to 100% abstraction
+
+
+Encapsulation:
+using access modifiers like public, private, protected and default
+public - all the inheriting/non inheriting classes can access, inside/outside packages
+private - no one can access outside the class
+protected - all the inheriting classes can access
+default - all the classes within the package. If no keyword assigned, default is assigned
+
+
+Packages - why used?
+categorization of interfaces and classes.
+provides access protection - default methods/vars only accesible inside a package
+package1.apple and package2.apple - we can differentiate due to package
+
+
+Extending a class:
+
+
+Implementing an interface:
+
+
+
+Default keyword:
+
+
+Diamond Problem while inheriting 2 classes:
+
+------------------------------------
+Default methods in interface:
+
+- Java interface default methods will help us in extending interfaces without having the fear of breaking implementation classes. Suppose C1 implements I1 and we need to add a method in I1, we'll have to implement it in C1 and all the other classes which implement I1 -> Lot of rework. So delcare a default method in I1 -> not mandatory to add in implementing classes.
+
+- Java 8 interface default methods will help us in avoiding utility classes, such as all the Collections class method can be provided in the interfaces itself.
+
+- If any class in the hierarchy has a method with same signature, then default methods become irrelevant. A default method cannot override a method from java.lang.Object. The reasoning is very simple, it’s because Object is the base class for all the java classes. So even if we have Object class methods defined as default methods in interfaces, it will be useless because Object class method will always be used. That’s why to avoid confusion, we can’t have default methods that are overriding Object class methods.
+
+Abstract Classes and Methods:
+Abstract methods -> no implementation only declarations
+Abstract class -> class which has one or more abstract methods, write keyword abstract in the class defn. If any other class extends this abstract class it has to implement all the methods
+
+-------------------------------
+Interfaces + changes in java8:
+
+- Prior to java8 only metHod declarations were allowed in interfaces
+- Now we can include default and static methods in interfaces
+- Default method in interface : use default keyword :
+public interface Interface1 {
+	void method1(String str);
+	
+	default void log(String str){
+		System.out.println("I1 logging::"+str);
+	}
+}
+
+ Now when a class will implement Interface1, it is not mandatory to provide implementation for default methods of interface. This feature will help us in extending interfaces with additional methods, all we need is to provide a default implementation.
+ 
+ Consider a second interface Interface2:
+ public interface Interface2 {
+	void method2(String str);
+	
+	default void log(String str){
+		System.out.println("I1 logging::"+str);
+	}
+}
+ 
+If our class implements both the interfaces Interface1 and Interface2 - It'll get confused as to which log() should it call if needed because both have the same signature (return type + input params) (Diamond Problem in classes). So compiler tells to override one of them in our class. If signature not same - no worries.
+
+So if we override log() of interface1, it'd look something like this:
+@Override
+	public void log(String str) {
+		Interface1.super.log(str);
+	}
+
+--------------------
+
+Static method in interfaces java 8
+
+Java interface static method is similar to default method except that we can’t override them in the implementation classes. This feature helps us in avoiding undesired results incase of poor implementation in implementation classes
+
+public interface MyData {
+
+	default void print(String str) {
+		if (!isNull(str))
+			System.out.println("MyData Print::" + str);
+	}
+
+	static boolean isNull(String str) {
+		System.out.println("Interface Null Check");
+
+		return str == null ? true : "".equals(str) ? true : false;
+	}
+}
+
+public class MyDataImpl implements MyData {
+
+	// this is not calling/referencing the static method from interface until we write the @Override annotation 
+	public boolean isNull(String str) {
+		System.out.println("Impl Null Check");
+
+		return str == null ? true : false;
+	}
+	
+	public static void main(String args[]){
+		MyDataImpl obj = new MyDataImpl();
+		//default method being called here
+		obj.print("");
+		obj.isNull("abc");
+	}
+}
+
+
+Final keyword in JAVA:
+----------------------
+
+1) Final variable - value cannot be changed
+2) Final method - cannot override it, can inherit it though
+3) Final class - cannot extend it
+

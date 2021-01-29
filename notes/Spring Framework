@@ -1,0 +1,247 @@
+Spring Framework
+
+https://dzone.com/articles/dependency-injection-in-spring
+https://medium.com/quick-code/spring-vs-spring-boot-a-comparison-of-these-java-frameworks-14a1b594657
+
+
+
+
+A typical java app when starting creates a lot of objects which are interconnected to each other. In a java app there are different kinds of classes - some are data objects, some are meant to perform some functionality.
+So whenever a data is generated, new instance of data object will be needed. This is not the case with functionality waale classes. One instance is enough. Anyone can access that instance to perform the business logic. So we SHARE INSTANCES.
+
+1) Dependency Injection
+-----------------------
+Here spring framework helps. 
+- Spring creates a region called Spring Application Context.
+- We can tell spring all the business classes whose only one instance is needed. 
+- Spring framework creates and manages an instance of these classes in the application context area.
+- A class instance might be dependent on B which might be dependent on C and D. Spring manages all this 
+  internally through DEPENDENCY INJECTION
+
+2) Database Connectivity
+------------------------
+
+In Java, we use JDBC for database connectivity. Very difficult and uneasy
+	So Spring has different APIs which make connecting to DB easy
+
+3) Spring MVC
+-------------
+
+Most of the java apps are webapps which work on RESTful calls. Spring MVC provides a frameworks to do so
+
+Inversion of Control:
+---------------------
+
+Consider a Car class which has an Engine object defined in it.
+
+public class Car{
+  private Engine engine;
+
+  Car(){}
+
+  public void startEngine(){}
+}
+
+The car could have 2 types of engines - Combustion and Electric
+So, normally we'd initialize what kind of engine we want in the Car class like Engine engine = new Engine(Combustion)
+
+But this is hard coding the value of engine to always be combustion.
+
+Why not the user who is delcaring the Car object tell us what kind of engine she wants!
+Car mycar = new Car(Electric);
+
+Car constructor -> Car(Engine e){
+  this.engine = e;
+} 
+
+This is INVERSION OF CONTROL!!
+Giving the control in hands of the declaring entity. 
+This structure enables easy testing and loose coupling
+
+Dependency Injection in general:
+--------------------------------
+
+Once we give the control of creation of Car obj in other entity's hands, we create a dependency. Creation of a Car obj depends on creation of engine object. Engine obj might depend on Crankshaft obj and so on. So a dependency tree is created. 
+
+car - engine - camshaft < ..
+          \ Crankshaft < ..
+
+This complexity would continue to grow as we continue to introduce more dependencies. To resolve this complication, we need to abstract the creation process for an object based on its dependency tree. This process is what constitutes a DI framework.
+
+In general, we can reduce this process into three parts:
+(1) Declare what dependencies are required for a given object.
+(2) Register classes that are eligible to create these dependent objects.
+(3) Provide a mechanism for creating objects, using the information in (1) and (2).
+
+Either an explicit declaration of dependencies or introspection of the constructor for a class satisfies (1). We look at the Car constructor and can get to know about the dependency on Engine.
+We must register an eligible Engine Class - Combustion Engine class or Electric Engine class which can satisfy the engine requirements for the Car - (2).
+
+Lastly, (3) we take the previous two requirements and puts them into action. In practice, this means that when an object is requested, such as a Car object, we must walk the dependency tree and check that there is at least one eligible class for all dependencies. For example, declaring the CombustionEngine class as eligible satisfies the Engine node requirement. If such a dependency exists, we instantiate the dependency and then move to the next node. 
+
+If there is more than one class that satisfies a required dependency, then we must explicitly state which of the possibilities should be selected.
+
+Similarly, if the dependency graph contains a cycle, where an object of class A is required to instantiate an object of class B, but class B requires an object of class A, then we must throw an error.
+
+Once we are sure that all dependencies are satisfied, we can then construct the dependencies, starting with the terminal nodes. In the case of our Car object, we first instantiate Camshaft and Crankshaft objects — since those objects do not have dependencies — and then pass those objects to the CombustionEngine constructor to instantiate a CombunstionEngine object. Finally, we pass the CombustionEngine object to the Car constructor to instantiate our desired Car object.
+
+Dependency Injection in Spring:
+-------------------------------
+
+Application context - Spring framework centers around the ApplicationContext interface! This interface represents a context responsible for implementing the 3 DI responsiblitites mentioned above.
+We register eligible classes with the ApplicationContext through either Java-based or XML-based configurations and request the creation of objects, called beans, from the ApplicationContext. The ApplicationContext then builds a dependency tree and traverses it to create the desired bean.
+
+The logic contained in the ApplicationContext is often referred to as the "Spring Container".
+
+
+Java Based config:
+-------------------
+
+Spring allows developers to provide DI configurations using Java code. At its core, two main annotations make up this process:
+
+@Configuration: Defines a configuration class.
+@Bean: Declares that the return value of the annotated method should be used as a dependency.
+
+App context interface is responsible for Dependency Injection in Spring
+You give the Config class as an input to the AnnotationConfigApplicationContext obj 
+The config class would have all the beans specified, Spring creates and supplies objects for these beans
+
+
+Check out interviewprep/spring/spring works / annotations package
+
+Automated Java based config:
+-----------------------------
+
+To support automated Java-based configuration, spring gives:
+- @Component: Registers as a class as being managed by Spring.
+- @Autowired: Instructs Spring that a dependency should be injected.
+- @ComponentScan: Instructs Spring where to look for classes annotated with @Component
+
+ComponentScan annotation is applied to the config class with param basepackage/ baseclass telling the location of Components.
+
+Check out interviewprep/spring/spring works / automated depn inj package
+
+XML-Based Configuration:
+------------------------
+
+we define our beans, and the relationships between them, in XML configuration files and then instruct Spring where to find our configuration files.
+defining a bean in xml:
+<bean id="car" class="com.dzone.albanoj2.spring.di.domain.Car">
+  <constructor-arg ref="engine" />
+</bean>
+
+While creating the application context obj :
+ApplicationContext context = new ClassPathXmlApplicationContext("basic-config.xml");
+Car car = context.getBean(Car.class);
+car.start();
+
+How Spring deals with Circular dependencies and multiple elligible classes?
+---------------------------------------------------------------------------
+
+Multiple classes:
+-----------------
+There can be two types of Engine classes which can both qualify for Autowired injection to Car class:
+
+@Component
+ElectricEngine implements Engine{...}
+
+@Component
+CombustionEngine implements Engine{...}
+
+Spring has a problem deciding Which one to inject! Both are good
+
+So we use @Qualifier where injection would happen!
+Two steps:
+1) Give name to the component:
+@Component("defaultEngine")
+ElectricEngine implements Engine{...}
+
+2) specify it in the Qualifier
+Class Car{
+  @Autowired
+  public Car(@Qualifier("defaultEngine) Engine engine){...}
+}
+
+OR! Add @Primary annotation to ElectricEngine class if you are sure that you wouldn't want to change the preference very soon
+
+
+Cyclic dependencies:
+--------------------
+
+Foo needs Bar, Bar needs Foo! Cycle!!
+
+@Component
+public class Foo {
+    private Bar bar;
+    @Autowired
+    public Foo(Bar bar) {
+        this.bar = bar;
+    }
+}
+
+@Component
+//@Lazy
+public class Bar {
+    private Foo foo;
+    @Autowired
+    public Bar(Foo foo) {
+        this.foo = foo;
+    }
+}
+
+use the @Lazy annotation on one of the classes and at the point of injection. This instructs Spring to defer the initialization of the annotated bean and the annotated @Autowired location. This allows one of the beans to be successfully initialized, thus breaking the circular dependency chain.
+
+
+Spring vs Spring Boot:
+----------------------
+
+Why Spring boot needed when Spring is here? - Becuase it is a lot of configuration in Spring! Boot does it for you.
+It takes a lot of time for a developer to set up a basic project using Spring MVC with minimum functionality.
+Consider using an ORM like Hibernate with Spring. You need to specify datasource, entity manager etc.
+
+How does spring boot solve the problem?
+- Spring Boot does all the configs using AutoConfiguration and will take care of all the internal dependencies that your application needs — all you need to do is run your application. Spring Boot will auto-configure with the Dispatcher Servlet, if Spring jar is in the class path. It will auto-configue to the datasource, if Hibernate jar is in the class path. Spring Boot gives us a pre-configured set of Starter Projects to be added as a dependency in our project.
+
+- During web-application development, we would need the jars that we want to use, which versions of the jars to use, and how to connect them together. All web applications have similar needs, for example, Spring MVC, Jackson Databind, Hibernate core, and Log4j (for logging). So, we had to choose the compatible versions of all these jars. In order to decrease the complexity, Spring Boot has introduced what we call Spring Boot Starters.
+
+So whatever your need is, just include a starter dependency in your project and get coding!
+For using Spring + Hibernate just add spring-boot-starter-data-jpa
+spring-boot-starter-web: Web and RESTful applications
+spring-boot-starter-test: Unit testing and Integration Testing
+spring-boot-starter-jdbc: Traditional JDBC
+spring-boot-starter-hateoas: Add HATEOAS features to your services
+spring-boot-starter-security: Authentication and Authorization using Spring Security
+
+
+When you apply @SpringBootApplication annotation to the main class, spring boot does all of the configurations like:
+
+- @Configuration: Tags the class as a source of bean definitions for the application context.
+
+- @EnableAutoConfiguration: Tells Spring Boot to start adding beans based on classpath settings, other beans, and various property settings. For example, if spring-webmvc is on the classpath, this annotation flags the application as a web application and activates key behaviors, such as setting up a DispatcherServlet.
+
+- @ComponentScan: Tells Spring to look for other components, configurations, and services in the com/example package, letting it find the controllers.
+
+Dispatcher Servlet:
+responsible for mapping urls to functions/methods
+When you get a request to /user, dispatcher servlet sees the method which is mapped to this url. request data is passed to this method, processing happens and response in the form of a Bean is ready. It invokes the specified convertor (like Jackson) on the response and sends it back
+
+Spring Web App:
+---------------
+
+Creating a get/post mapping:
+
+1. Declare a class with @Controller annotation
+2. Each method can be considered as a route, So to create getMapping which will return user details:
+@getMapping("/user")
+public User getUserDetails(){
+  return new User(..);
+}
+
+Note: Here we are directly returning a bean as the return type! If you return string - can easily display it on web page, what about a bean? 
+* Jackson coverts all the beans into a JSON Object and returns it
+But you need to specify the getters for all the feilds in User class so that jackson can pick it up, otherwise you get a whitelabel error page
+
+Types of params we can take for a request:
+1. Path -> /user/{name}:
+@GetMapping(path="/user/{name}")
+public getUser(@PathVariable String name){..}
+

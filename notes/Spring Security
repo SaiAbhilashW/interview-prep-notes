@@ -1,0 +1,80 @@
+https://youtube.com/playlist?list=PLqq-6Pq4lTTYTEooakHchTGglSvkZAjnE
+
+Spring Security:
+
+Application Security Framework - Handles pretty much all the basic vulnerabilities like Session fixation, clickjacking and cross site request forgery, etc just by importing in the project.
+
+Results in fewer vulnerabilities long term
+
+What can you do with spring Security?
+- username /password auth
+- SSO / OKTA / LDAP
+- App level authorisation - only logged in users can access the /user route or only users with admin role can access the /dashboard route
+- Intra app authorisation like oauth
+- microservices Security with JWT - services securely talking to each other
+
+Authentication : who is the user?
+Authorization : Are they allowed to do certain things 
+Principal : curently logged in user
+Granted Authority : way of providing Authorization.
+Roles : Group of authority.
+
+
+Just by adding the spring security dependency in your project you'll see that the app asks for login id and passowrd when you access any url. What's happening?
+
+Filters and Servlets
+--------------------
+
+Inside all the abstraction of Spring, there are servlets responsible for doing work when a request comes to the app.
+So servlet A will work for route /user, B for /dashboard and so on. 
+Filters act on all the requests incoming to the app and do stuff/apply changes on all of them based on conditions.
+
+Spring security puts in such a filter which examines every request and decides whether it should allow or deny that request.
+
+- Spring adds mandatory authentication for all urls except /error
+- Shows a login form and validates the data
+- creates a default user 'User' and passoword - logs automatically generated password. 
+
+If you want to create your own default user password - go to Application.properties : 
+spring.security.user.name = User
+spring.security.user.password = foo
+
+In a spring security app, AuthenticationManager is responsible for authentication.
+It has a method called authenticate()
+
+We configure this using AuthenticationManagerBuilder:
+- type of authentication
+- user info details
+
+configure from where? 
+- override configure() in a class which extends WebSecurityConfigurerAdapter by passing a AuthenticationManagerBuilder instance
+- add @EnableWebSecurity annotation to the class
+-   password encoding :
+Create a bean of type PasswordEncoder and return the type of password encoder you want. Spring security scans for this bean and applies it.
+
+Once we give these details, a new AuthenticationManager is cretaed with these properties
+
+Authorization:
+--------------
+- override configure() in a class which extends WebSecurityConfigurerAdapter by passing a HTTPSecurity instance
+
+Authentication:
+---------------
+
+Using Providers - AuthenticationProvider.authenticate()
+
+Authentication object containing id/password => AuthenticationProvider.authenticate() =>returns Currently logged in user i.e. Principal in authentication object
+
+
+Authentication providers can be many - one doing id/password auth, ldap, oauth etc. Providers have a supports method which when invoked tell which kind of auth is supported by each provider.
+
+1) The auth filter intercepts the auth request
+2) It creates an auth object and sends it to AuthenticationManager
+3) AuthenticationManager uses the supports method to find out which Provider supports this kind of auth.
+4) AuthenticationManager calls the authenticate() on selected provider and passes the authentication object
+5) AuthenticationProvider calls the UserDetails service to get a user instance mentioned in the request
+6) UserDetails service returns UserDetails instance to provider which it authenthicates
+7) If authenthication is successful - authentication object is returned with the Principal and is passed to the filter
+8) If auth fails, authenthication exception is thrown and it bubbles up to the filter
+9) For successful auth, filter takes the authenthication object and saves it into security context in thread local object.
+10) One filter takes in the authenthication object and saves it in user's session so that user doesn't have to authenticate in subsequent requests.

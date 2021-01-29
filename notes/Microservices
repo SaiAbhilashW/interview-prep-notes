@@ -1,0 +1,46 @@
+Microservices
+Split one big app into many smaller apps, build, deployed on different servers and test them seperately and have them talk over a network to function like a single large app
+
+App1(User info)		App2(Web view) 		App3(Product catalogue)
+|					|					|
+Server 1 ----------	Server2	----------	Server3
+					  |
+					 User
+
+Each functionality deployed seperately
+
+User comes to Web View service and makes a request to see product catalogue. Web View app calls Product service to get that data. User info can be stored and worked upon on User Service App1.
+
+Advantages :
+
+1. Risk of deployement is eased. You make changes product service, it doesn't affect the other services. One service goes down doesn't mean entire app goes down.
+
+2. During festival season, there would be extra load on product service, You can scale it up by adding more servers. Individual scaling of services is better instead of scaling the whole app
+
+3. Services talk to each other using REST APIs, so you don't need to use a common language to build all the services. Node app can talk to Spring app and also to a service developed on python flask.
+
+Disadvantages :
+
+1. Deployement and architecture complexity - need to do proper seperation of concerns i.e. when a feature is introduced we should not need to change code in all services.
+2. Service discovery - Services should be up and running to talk to each other, how do they talk, what if one of them isn't working
+
+Service Discovery
+-----------------
+
+Services all register to a common registry. User asks the registery for a service by the name _ _ _ . Registry makes the call to that service.
+
+Client side service discovery :
+Client makes a call to the service registry asking it for some service, gets the result, makes a call to the service which registry returned. Client needs to make 2 calls.
+e.g. You googling for dominos pizza number
+
+Server Side Service Discovery :
+Client calls service registry asking for service A. Service registry locates service A and makes a call to service A. Client needs to make just 1 call. registry service must be on all the time.
+e.g. receptionist redirecting you to someone
+
+Netflix OSS tools :
+
+Eureka - client services can register themselves and discover other services
+Zuul - Api gateway, dynamic routing, e.g. /api/product is mapped to Product service
+Hystrix - Monitoring api calls and load on each service, setup call limits after which connection to service is cut-off and some default response is given/ redirection to other service happens
+Feign - Don't need to write any code to call a service from another, Just give the interface definition of the calle service. Otherwise you can use RestTemplate (you should know hard-coded url of other service)
+Ribbon - Setup multiple instances of a service so that load is balanced. Default- calls to instances in a round robin manner

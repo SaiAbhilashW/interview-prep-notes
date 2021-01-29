@@ -1,0 +1,85 @@
+MongoDB
+
+Insert :
+
+_id field is the primary key. If you don't give a value for it.. Mongo Driver automaitically makes a field.
+
+Find :
+
+findAll - db.test.find({});
+find with status = "A" - db.test.find({status: "A"})
+find with status = "A" or "B" - db.test.find(status: {$in : ["A", "D"]});
+find AND condition - db.test.find({status: "A", quantity: 30});
+find OR condition - db.test.find({$or : [{status: "A"}, {quantity: {$lt: 30}}]});
+
+find on nested docs - db.test.find({"size.height": 30}); //where size : {height: 30, width: 20}
+					- db.test.find({"size.height": {$lt: 15}});
+
+Query an array :
+Query an array with exactly 2 elemnts red and black in that order - db.inventory.find( { tags: ["red", "black"] } )
+Query an array which contains both red and black - db.inventory.find( { tags: { $all: ["red", "blank"] } } )
+Generalized formula - { <array field>: { <operator1>: <value1>, ... } }
+
+Return item and status field only (_id comes implicitely) //to suppress _id field write _id: 0
+db.inventory.find( { status: "A" }, { item: 1, status: 1, "size.height": 0 } )
+
+Existence Check - db.inventory.find( { item : { $exists: false } } )
+
+
+Update :
+_id field can't be updated
+If update() includes upsert: true and no documents match the filter, new document is created and inserted
+
+db.inventory.updateOne(
+   { item: "paper" },
+   {
+     $set: { "size.uom": "cm", status: "P" },
+     $currentDate: { lastModified: true }
+   }
+)
+
+Delete :
+db.inventory.deleteMany({ status : "A" }) - deletes all relevant documents
+db.inventory.deleteOne({ status : "A" }) - deletes first relevant document
+
+Text Search
+
+Can search a given text value in all the text fields in the document
+
+Steps: 
+1. Create a text index - db.stores.createIndex( { name: "text", description: "text" } )
+2. use the text operator - db.stores.find( { $text: { $search: "java coffee shop" } } )
+
+//finds all the documnets in the collection who have string java or coffee or shop or a combination of these in any of the text field in them
+
+db.stores.find( { $text: { $search: "\"coffee shop\"" } } ) //exactly that pattern
+db.stores.find( { $text: { $search: "java shop -coffee" } } ) //java or shop and not coffee
+
+db.stores.find(
+   { $text: { $search: "java coffee shop" } },
+   { score: { $meta: "textScore" } }
+).sort( { score: { $meta: "textScore" } } )
+
+//sorts the fields whose text fields match in order of how well they match
+
+
+
+-------------------------------------------------------
+
+SHARDING
+https://docs.mongodb.com/manual/sharding/
+
+Database systems with large data sets or high throughput applications can challenge the capacity of a single server. Two things we can do -
+1. Vertical Scaling : Increase RAM, make CPU more powerful. There is a limit to which this can be done.
+2. Horizontal Scaling : Distribute load over multiple servers. But complexity in infrastructure and deployement increases.
+
+Sharded Clusters
+
+Client --- mongos (1 or more) --- Shards (2 or more)
+		   |						|
+		   Config Servers (replica sets) 
+
+mongos act as query router, interface between client and sharded clusters
+Shard contains a subset of sharded data
+Data is sharded at collection level
+You should choose a shard key in the collection. It should be present in all the entries. It cannot be changed once selected. Collection will have only one shard key

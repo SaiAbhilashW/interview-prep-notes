@@ -1,0 +1,17 @@
+Library vs Framework:
+---------------------
+(https://dzone.com/articles/dependency-injection-in-spring)
+
+A library is a set of standalone code that is used within another set of code. For example, a math library may provide classes and methods that allow us to perform complex operations. These classes and methods are imported by our application and are adapted within our code to make up our application.
+
+App code 
+    ------
+        library code
+
+A framework, on the other hand, can be thought of as a skeleton in which our code slots into to create an application. Many frameworks stub out application-specific portions and require that we as developers provide code that fits into the framework. In practice, this means writing implementations of interfaces and then registering the implementations with the framework.
+
+Framework code 
+    ------------
+        framework interface
+            -----------------
+                App Code

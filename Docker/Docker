@@ -1,0 +1,457 @@
+Docker Commands 
+---------------
+
+
+- docker ps => show running contaniers
+- docker ps -a => show all containers
+- docker images => shows all images
+- docker container rm [container id]
+- docker run busybox:1.24 => searches for busybox image with tag 1.24 locally, if not found downloads it from dockerhub and spins up a container
+- docker run -i [imageName] => spins up an intercative container where you can access cli and run commands inside the container. As soon as you exit the cli, container dies.
+- docker inspect [containerID] => Outputs information about container in JSON
+- docker run -p [host port]:[container port] imageName => expose the container port and map it to the host port
+- docker run -d imageName => container runs in background and doesn't die after the terminal exits
+- docker logs [containerID] => shows the logs of a container
+- docker history [imageName] => shows the list of layers present in the image
+- docker commit containerID repository_name:tag
+- docker build -t reponame/imagename:tagName . => . tells the program to search for Dockerfile in the current directory. you can specify someother path too. Use -f option to do that
+- docker tag [imageId] reponame/imagename:1.0 {like abhi/debian:1.0} => Renaming the image and making a copy of it. Just the name changes, rest all including the imageId remains the same.
+- docker login --username={abhi} => login to dockerhub
+- docker push [reponame/imagename]:[tagName] => pushing the image to docker hub. Can be found in your account/ Repositories section.
+- docker exec -it [containerId] command { like bash } => runs this command on a running container
+- docker run -d -p 8080:8080 --link {theOtherContainerName} {thisContainerName:tag} => Links both the containers so that they can talk to each other
+- docker-compose up => spin up containers using the docker-compose.yaml file
+- docker-compose ps => check the running containers managed by docker compose
+- docker-compose logs [containerName] => shows logs
+- docker-compose stop => stop the containers without removing them
+- docker-compose rm => remove the containers
+- docker-compose build => builds/rebuilds all the images
+- docker network ls  => gives the list of all the types of networks installed in our machine
+- docker-compose run containerName python test.py => runs a one time command for a specific container
+
+
+Outtakes from the Udemy Course
+----------------------------------------------------------------------------------------------------------
+https://sapient.udemy.com/course/docker-tutorial-for-devops-run-docker-containers
+
+
+Containers vs VMs
+
+Containers share the same kernel / OS. Containers run on top of a container engine layer
+
+app1     | app2      | app3
+bin/lib  | bin/lib   | bin/lib
+-------Conatiner engine-------
+-------Operating System-------
+-------Physical Servers-------
+
+
+Each VM has seperate kernel / OS which runs on a hypervisor responsible for sharing the resoures like memory and ram with each OS.
+
+app1     | app2      | app3
+bin/lib  | bin/lib   | bin/lib
+Guest OS | Guest OS  | Guest OS
+---------Hypervisor-----------
+-----Host Operating System----
+-------Physical Servers-------
+
+
+Docker runs a Client server architechture.
+
+user giving commands like - {docker ps} -> Docker Client -- REST --> Docker Host <--> registry
+
+Docker client communicates with Docker deamon.
+Two types of docker clients - Command line and Kinmatic
+
+
+Docker Host has :
+1. Docker Deamon
+2. Containers
+3. Images
+
+** If an image is a class, then the container is an instance of that class - a runtime object
+
+Repository - Inside a registry, images are stored in Repositories. collection of different docker images with the same name but different tags which represents a different version of an image.
+Registry - A place where we store images. You can host your own registry or use docker's public registry.
+
+
+
+Containers and Image layers:
+Each container when spun up is given it's own writable layer on top of all the layers present in an image. Here all the changes made at runtime are stored without affecting the base image. This base image can then be used to create another container too.
+
+How to build a custom docker image?
+- using docker commit command
+   Consider an example where we will:
+   1. Spin up a container form a base image
+   2. Install git package inside the image
+   3. Commit changes made in the container and form a new image
+
+   Steps:
+   1.docker run -it debian:[tagName] => pulls the official debian repo and spins up a container. -it is to access the container filesystem via cli
+   2. In the cli -> apt-get update && apt-get install -y git => installs git in our filesystem. Now when you type git in cli you see it is installed. Exit the shell now.
+   3. docker commit containerID repository_name:tag => e.g docker commit 810a3eb3211 abhi/debian:1.0 . This creates a new image in abhi repository and returns the imageId
+
+******** VIMP ********
+- writing and executing a Dockerfile
+Dockerfile would be like:
+--
+FROM debian:[tagName]
+RUN apt-get update
+RUN apt-get install -y git
+CMD ["echo", "Hello world"]
+--
+
+Now we supply this file to build the docker image
+docker build -t reponame/tag . => . here tells the program to search for Dockerfile in the current repo. This path is also known as the build context path.
+
+The docker clien transfers all the files in the build context to docker deamon
+Docker deamon starts doing the steps specified in the Dockerfile
+for each step it creates a container and executes the commands, similar to the first approach of docker commit but automated. Once the new layer is committed to the image, it kills the container. Goes on to the next step. Spins up a new container with the same id as previous one, does the modifications, kills it and so on...
+
+Each RUN instruction creates a new layer on top of the base image.
+So it is better to chain RUN instructions inorder to reduce the number of layers formed.
+
+* CMD instruction in dockerfile -> The first command executed when the container starts up. If you don't specify any command the default command of base image will be executed. 
+Note: The command is only execute when we run the container and not while building an image
+
+
+Docker Cache:
+-------------
+
+While building images Docker sees if there has already been a layer created for an instruction in the docker file which was build during previous build
+E.g.
+Prev file:
+FROM debian:latest
+RUN apt-get update
+RUN apt-get install -y git 
+
+Current file:
+FROM debian:latest
+RUN apt-get update
+RUN apt-get install -y git 
+RUN apt-get install -y python
+
+It sees that the first 3 instructions have already been executed previously and there exists an image for the same. So it just copies that image, makes modifications on it and returns a new image. 
+
+Cache can be problematic sometimes. So if you don't want it - --no-cache=true
+
+
+* COPY :
+--------
+COPY abc.txt src/txt/abc.txt => copies abc.txt to src/txt/ in container
+
+* ADD :
+-------
+Same as COPY but allows you to download files from internet and copy. Also automatically decompresses any compressed files. COPY is used because it is more transperent and simple
+
+* WORKDIR :
+-----------
+Sets the working directory in the container
+
+Pushing images to Docker Hub:
+----------------------------
+1. Appropriately Renaming an existing image and making a copy of it.
+docker tag [imageId] reponame/imagename:1.0 {like abhi/debian:1.0}
+2. docker push [reponame/imagename]:[tagName] => pushing the image to docker hub. Can be found in your account/ Repositories section.
+
+Docker Conatiner linking:
+-------------------------
+- docker run -d -p 8080:8080 --link {theOtherContainerName} {thisContainerName:tag} => Links both the containers so that they can talk to each other
+
+Docker creates a secure tunnel between the containers that doesn't need to expose ports outside the container
+
+
+Docker Compose:
+---------------
+
+docker-compose.yaml 
+e.g.
+version:'3'          => specify the version of docker-compose
+services:
+   mywebapp:         => name of container
+      build: .       => the directory where the Dockerfile is present
+      ports:
+         -"8080":"8080" => port mapping
+      depends_on:
+         - {mydbcontainername}   => links the container
+   mydbcontainername
+      image:sql:latest
+
+
+Docker Networking:
+-----------------
+How to create a network? => docker network create --driver {bridge/none/any other network type} {networkName}
+
+4 types of networks:
+
+1. None/Closed network
+Doesn't have any access to outside world. 
+docker run --net none imageName:tagName => creates an isolated container. Anything inside this container can't talk to the outside world and do stuff like http requests etc. ideal for high protection and no contact with outer would use cases. 
+Has a loopback interface created which can't talk to outside world but internal app Communication (what?)
+
+2. Bridge network
+This is default type of network for containers. 
+Has two interfaces - loopback interface and private network interface. These private interface can connect to the bridge network of the host.
+Containers can use this private network interface to connect with one another and also to the outside world.
+
+by default, Containers within two seperate brigde networks can't talk to each other.
+Inorder to make container1 talk to container3, you execute the command in container1 bash:
+docker network connect bridge container3
+
+This creates one more network interface in container3 props which is within the range of container1 bridge network
+
+To disconnect, in container1 bash : docker disconnect bridge container3
+
+3. Host network
+The least protected model. Containers are directly added to the host's network stack.
+They have full access to host's interface. Called open containers.
+Since they don't need to traverse the docker0 bridge and port mappings for a request, they have a higher levels of performance.
+
+4. Overlay network
+Supports multihost networking out of the busybox
+requires some preexisting conditions:
+Running docker engine in swarm mode
+key value store such as consul
+
+
+Defining networks in Docker Compose file:
+-----------------------------------------
+
+version: '3'
+services:
+   mydockerapp:
+      build: ---
+      port: ---
+      depends_on: ---
+      networks:
+         - mynet
+   redisapp:
+      image: redis
+      networks:
+         - mynet
+networks:
+   mynet:
+      driver: bridge
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------
+
+
+Container - Nothing but a process, with some added encapsulation features applied to it in order to keep it isolated from the host and from other containers. Each container has its own filesystem, this filesystem is provided by a docker image.
+
+Image - Everything needed to run an app - code or bins, runtime dependencies, other filesystem objects needed
+
+- runs natively on linux(?) and shares the kernel with the host machine and other Containers. Takes up very less memory, so lightweight and starts up fast
+
+VM - has a guest operating system with a virtual access to the host resources through a hypervisor. Take up a lot of overhead in addition to running the app
+
+What happens when you run docker run hello-world first time
+ 1. The Docker client contacted the Docker daemon.
+ 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+    (amd64)
+ 3. The Docker daemon created a new container from that image which runs the
+    executable that produces the output you are currently reading.
+ 4. The Docker daemon streamed that output to the Docker client, which sent it
+    to your terminal.
+
+
+Build and run a docker container
+
+Dockerfile - Dockerfiles describe how to assemble a private filesystem for a container, and can also contain some metadata describing how to run a container based on this image.
+sample:
+(x) => number of layers created
+FROM node:current-slim   => download the official node js Images
+                           a layer is created (1)
+
+WORKDIR /usr/src/app     => Switch to the directory in the container filesystem
+                           an intermediate contanier is spin up, config changes are made into a new layer, container dies (2)
+COPY package.json .      => copy from host to the container
+                           an intermediate contanier is spin up, config changes are made into a new layer, container dies (3)
+
+RUN npm install         => an intermediate contanier is spin up, stuff is installed, container dies (4)
+
+EXPOSE 8080              => expose 8080 port of container
+                        an intermediate contanier is spin up, config changes are made into a new layer, container dies (5)
+
+CMD [ "npm", "start" ]   => run this command
+                        an intermediate contanier is spin up, config changes are made into a new layer, container dies (6)
+
+
+COPY . .                 => copy rest of the code
+                        an intermediate contanier is spin up, config changes are made into a new layer, container dies (7)
+
+* Build context - location of your code (the .)
+docker image build -t mytag .
+here, . if you are in that directory
+/home/code/whatever if you are not
+
+Build your image:
+1. Go to the folder which contains the Dockerfile
+
+2. docker build --tag bulletinboard:1.0 .  -> This builds an image based on the dockerfile specs
+
+3. docker run --publish 8000:8080 --detach --name bb bulletinboard:1.0
+=> --publish asks Docker to forward traffic incoming on the host’s port 8000 to the container’s port 8080. Containers have their own private set of ports, so if you want to reach one from the network, you have to forward traffic to it in this way. Otherwise, firewall rules will prevent all network traffic from reaching your container, as a default security posture.
+=> --detach asks Docker to run this container in the background.
+--name specifies a name with which you can refer to your container in subsequent commands, in this case bb
+
+4. docker stop bb    stops container
+5. docker rm bb (or docker rm --force bb) removes Container
+
+* start with a FROM command, follow it with the steps to build up your private filesystem, and conclude with any metadata specifications
+
+* An image is made up of a manifest and a list of layers. In simple terms, a “tag” points to a combination of these artifacts. You can have multiple tags for an image. The Docker tag command creates a new tag for an image. It does not create a new image. The tag points to the same image and is just another way to reference the image.
+
+docker images    => shows all images
+docker rmi node-docker:v1.0.0  => removed tag v1.0.0 from node-docker image
+
+docker ps      => shows the list of containers running currently
+
+docker history imageName => shows the layer history - when was it created, size etc
+
+
+Namespaces :
+Let us take an OS and make multiple virtual OS (like hypervisor in VMs)
+Docker container is an organised collection of these namespaces. Every container has each of these namespaces, isolated
+Linux namespaces:
+- Process ID (pid) - gives its own process tree, one container has no clue what 
+- network (net) - isolated ips, routing tables, etc
+- filesystem/ mount (mnt) - isolated root file system
+- Interprocess Communication (ipc) - lets processes in a single container access the same memory, isolates it from other containers
+- UTS (uts) - gives every container its own host name
+- User (user) - maps user inside of a container to different users in the host, containers root mapped to non-priviledged user in host
+
+A lot of contaniers when created on a host OS will compete with each other for resources. To control them we have Control Groups!
+
+Control Groups:
+distributes host CPU, RAM and disk space to containers
+
+Docker History:
+
+Initially it was a python tool - had two parts - LXC(for interfacing namespaces and control groups) and AUFS (file system)
+LXC was an external tool, it was scaling itself and was breaking docker.
+So enter libcontainer - replacement for LXC
+Docker started expanding and became a monolith
+Ironic because it was leading the charge for microservices but itself was becoming a monolith
+Kubernetes - container orchestrator, only wnated to use the docker runtime but got all bloatware added
+
+Open container initiative + developments in docker = today's docker structure :
+Client -REST-> Deamon (Docker API) -GRPC-> containerD (execution and lifecycle) -> OCI(runc) runtime
+
+1. docker container run {params}     -> Client asks deamon to create a contanier as an API request 
+2. deamon calls containerD,using a GRPC API, over a local UNIX socket client.NewContainer(context...)
+3. containerD has a shim process, which invokes runc process. Runc initializes the container and exits
+4. One containerD has more than one shims under it
+
+In windows:
+Client (docker.exe) -> deamon (dockerd.exe) -> compute services
+
+
+HyperV container - Windows spins up a seperate virtual OS on top of the host OS and the container runs on top of it
+Always one container per VM
+docker container run \
+--isolation=hyperv
+
+
+Images: bunch of individual layers very loosely connected by a manifest file. Images don't know anything about each other.
+
+Manifest file has details on how/where to pull images from, has a list of layers and how to stack them
+Images - build time construct, is a stopped container. Or Container is a running image
+Image is basically a collection of files -> has app files + OS files/ lib files which it needs to run + manifest (file which shows how it needs to be run)
+
+You can start many containers from an image
+Images are read only
+Each container gets a thin writable layer created above the image. At no point data on image gets changed. If a container wants to write stuff, it copies the data from image and updates that in the writable layer
+
+
+docker pull - creates an api request to docker hub (default registry)
+1. First gets the maifest file which has the info about the layers
+   a. Client looks for a fat manifest (manifest list - list of arch supported and a manifest for them). can see the arch info by docker system info
+   b. Downloads the image manifest which suits the arch
+   c. pulls the layers by seeing the info in image manifest
+
+Image layers:
+- Updates
+----------------------------------
+- App code
+----------------------------------
+- Base layer - OS files and objects
+e.g a Ubuntu base layer, working on a centOS host OS
+- linux base layers work only on linux hosts, same for windows
+
+* Storage driver - aufs - read more - makes all the layers look like a file system
+ls-l /var/lib/docker/aufs/diff  - Linux
+c:/programdata/docker/windows filter ? - Windows
+
+watch this : 
+
+
+Recap:
+Images live in a registry - local/cloud. Even when we pull them they live in a local registry 
+
+Content addresable storage model:
+- runs a cryptographic algorithm over the content of a layer and gives a hash which is used as the layer's id (sha256:123456789fabce78934232)
+- image id - hash of the image config file
+So change anything in layer content or config file, hash changes
+
+
+Docker hub repos:
+official and unofficial
+docker image inspect -> gives us the info about image, including the layer hash and other details
+
+pulling images:
+docker pull image {registery}/{repo}/{image or tag}
+
+registry -> dockerhub.io (default)
+repo -> redis, nodejs etc
+image -> latest, v1.0.1 etc
+
+So when you do docker pull nodejs -> it is assumed that you want docker.io/nodejs/latest
+* latest need not be the most recent version, it is usually the most stable/updated verison
+
+*****
+Containers are basically a writable layer on top of the read-only layers of an image
+
+So, there can be multiple containers running, each mapping back to a single image
+For all read purposes - images are fine
+For all write processes, containers copy the image layers where the write needs to be done and make the changes in this layer
+
+* Linux container needs a linux kernel in linux docker hosts to run. Windows container needs a windows kernel. Can't swap.
+
+
+Logging:
+System/deamon logs:
+
+for lunix using Systemd -> journalctl -u docker.service
+non systemd -> /var/log/messages
+Windows:
+~/AppData/Local/Docker
+
+Container logs:
+Two types of logs - stdlog and stderr
+For entreprise docker -> set a default logging driver in deamon.json file (like syslog, splunk, etc)
+
+docker logs <container name>
+
+
+Docker Swarm
+------------
+Has two parts - secure cluster and orchestrator (will be replaced by kubernetes in near future)

@@ -1,0 +1,10 @@
+JPA (Java Persistence API):
+--------------------------
+The Java Persistence API provides a specification for persisting, reading, and managing data from your Java object to relational tables in the database.
+
+Mapping JAVA objects to database tables is called ORM (Object relational mapping). JPA is one possible approach to ORM.
+JPA permits the developer to work directly with objects rather than with SQL statements. The JPA implementation is typically called persistence provider like Hibernate, Eclipse Link, etc
+
+JPA Entity:
+An entity represents a table in database and each entity instance corresponds to a row in the table.
+Entity class are annotated by @Entity 
